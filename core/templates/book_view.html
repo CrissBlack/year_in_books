@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% block head %}
+    {{ ckeditor.load(pkg_type="basic") }}
+
+{% endblock %}
+{% block body %}
+
+    <div class="book-view-container">
+        <div class="top-section">
+            <div class="cover-section">
+
+                <img src="{{ book.cover_url }}" class="img-fluid rounded-start book-view-cover">
+                <div class="default-shelves-box text-center">
+                    {% for shelf in current_user.bookshelves[:3] %}
+
+                        <form method="post">
+                            <input type="hidden" name="next_url"
+                                   value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}">
+
+
+                            {% if book in shelf.books %}
+                                <button type="submit"
+                                        formaction="{{ url_for('main.remove_from_bookshelf', bookshelf_name=shelf.name, goodreads_id=book.goodreads_id) }}"
+                                        class="btn btn-success mb-2 mr-2 btn-sm">
+                                    {{ shelf.name }}
+                                </button>
+                            {% else %}
+                                <button type="submit"
+                                        formaction="{{ url_for('main.add_to_bookshelf', bookshelf_name=shelf.name, goodreads_id=book.goodreads_id) }}"
+                                        class="btn btn-secondary mb-2 mr-2 btn-sm">
+                                    {{ shelf.name }}
+                                </button>
+                            {% endif %}
+
+
+                        </form>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="book-info">
+
+                <h2 id="book-title" class="title-font book-title">{{ book.title }}</h2>
+                <p class="author-name">By: {% for author in book.authors %}
+                    {{ author.name }}
+                {% endfor %}</p>
+                <form method="post" id="rate-book" action="{{ url_for('main.rate_book', book_title=book.title) }}">
+                    <input type="hidden" name="next-url"
+                           value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}#rate-book">
+                    {% for i in range(1, 6) %}
+                        {% if own_review.rating %}
+
+                            {% if i <= own_review.rating %}
+                                <button class="checked-star" type="submit" name="rating-value" value="{{ i }}">&#9733;
+                                </button>
+
+                            {% else %}
+                                <button class="blank-star" type="submit" name="rating-value" value="{{ i }}">&#9733;
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button class="blank-star" type="submit" name="rating-value" value="{{ i }}">&#9733;
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                </form>
+
+
+                <p id="book-pages">{{ book.pages }} pages</p>
+
+
+                <div id="custom-shelves">
+
+                    {% for shelf in current_user.bookshelves[3:] %}
+                        {% if book in shelf.books %}
+                            <form id="remove-shelves-form"
+                                  action="{{ url_for('main.remove_from_bookshelf', bookshelf_name=shelf.name, goodreads_id=book.goodreads_id) }}"
+                                  method="post" style="display: inline-block">
+
+                                <input type="hidden" name="next_url"
+                                       value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}#custom-shelves">
+                                <button type="submit"
+                                        class="btn btn-link btn-remove-from-shelf">{{ shelf.name }}</button>
+
+                            </form>
+
+
+
+
+                        {% endif %}
+                    {% endfor %}
+
+
+                    <form id="add-shelves-form" method="post">
+                        <input type="hidden" name="next_url"
+                               value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}#custom-shelves">
+                        <div class="dropdown">
+                            <button class="custom-shelves-btn" type="button" id="dropdownMenuButton1"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                add shelves
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                {% for shelf in current_user.bookshelves %}
+                                    {% if book not in shelf.books %}
+                                        <li>
+                                            <button type="submit"
+                                                    formaction="{{ url_for('main.add_to_bookshelf', bookshelf_name=shelf.name, goodreads_id=book.goodreads_id) }}"
+                                                    class="btn dropdown-item">{{ shelf.name }}</button>
+                                        </li>
+
+                                    {% endif %}
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+
+
+                <div class="book-description">
+                    <div class="description-text">
+                        <h5>DESCRIPTION</h5>
+                    <p>{{ book.description }}</p>
+                    </div>
+                    <div class="toggle-buttons">
+                     <button type="button" class="hidden toggle-description-btn"></button>
+</div>
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="reviews-section">
+
+
+            <h2 class="text-center">Reviews</h2>
+
+            <div class="current-user-review">
+
+
+                {% if own_review.content %}
+
+
+                    <div class="card" style="background-color: transparent">
+                        <div class="card-header review-header">
+                            <h4>Your review</h4>
+                            <p>{{ own_review.date_created.strftime('%d %B %Y - %H:%M') }}</p>
+                        </div>
+                        <div class="card-body review-body-box ">
+                            <div class="review-content own-review line-clamp-8">
+                                {{ own_review.content }}
+
+
+
+
+
+
+
+
+
+                        </div>
+                            <div class="toggle-buttons">
+                            <button type="button" class="invisible toggle-comment-btn"></button>
+                                <details><summary class="edit-btn">Edit</summary>
+                                <form method="post" action="" class="review-form hidden">
+                                    <input type="hidden" name="next_url"
+                                           value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}#reviews">
+                                   <textarea name="review-body" rows="10" >{{ own_review.content }}</textarea>
+
+                                    <button class="btn btn-sm btn-success" type="submit" name="update-review"
+                                    >Save
+                                    </button>
+
+                                    <button class="btn btn-sm btn-danger" type="submit" name="delete-review"
+                                    >Delete review
+                                    </button>
+
+                                </form>
+                                </details>
+                                </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <form method="post" action="">
+                        <input type="hidden" name="next_url"
+                               value="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}#reviews">
+
+                        <textarea name="review-body" rows="6"></textarea>
+                        <button type="submit" class="btn btn-success btn-sm save-review-btn" name="update-review">Save
+                            review
+                        </button>
+                    </form>
+
+                {% endif %}
+            </div>
+            <hr>
+            {% set reviews = book.reviews %}
+            <h3>Other reviews</h3>
+            {% if not other_reviews %}
+                <p>None yet.</p>
+            {% else %}
+                <div class="other-reviews">
+                {% for review in other_reviews %}
+
+
+                    <div class="card" style="background-color: transparent">
+                        <div class="card-header review-header">
+                            <h4>{{ review.user.username }}'s review</h4>
+                            {{ review.date_created }}
+
+
+                        </div>
+                        <div class="card-body">
+                            <div class="stars">
+                                {% if review.rating %}
+                                    {% for i in range(1, 6) %}
+                                        {% if i <= review.rating %}
+                                            <button type="button" name="rating-value" class="checked-star"
+                                                    value="{{ i }}">&#9733;
+                                            </button>
+
+                                        {% else %}
+                                            <button class="blank-star" type="button" name="rating-value">&#9733;
+                                            </button>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                             <div class="review-content line-clamp-8"><p>
+                                   {{ review.content|safe }}</p></div>
+
+
+<div class="toggle-buttons">
+<button type="button" class="hidden toggle-comment-btn">Show more ⬇</button>
+    </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script>
+    const editCommentBtn = document.querySelector('.edit-btn')
+    const reviewForm = document.querySelector('.review-form')
+    const ownReview = document.querySelector('.own-review')
+
+    const reviewCardBodies = document.querySelectorAll('.card-body')
+    const bookDescription = document.querySelector('.book-description')
+
+    function toggleEditor(){
+        const toggleReviewBtn = editCommentBtn.closest('.card-body').querySelector('.toggle-comment-btn')
+
+        if (!ownReview.classList.contains('hidden')) {
+            toggleReviewBtn.classList.add('hidden')
+            reviewForm.classList.remove('hidden')
+            ownReview.classList.add('hidden')
+            ownReview.classList.remove('line-clamp-8')
+            editCommentBtn.textContent = 'Cancel'
+        }
+        else {
+            toggleReviewBtn.classList.remove('hidden')
+            reviewForm.classList.add('hidden')
+            ownReview.classList.remove('hidden')
+            ownReview.classList.add('line-clamp-8')
+            editCommentBtn.textContent = 'Edit'
+        }
+    }
+    function toggleReview(toggleButton, reviewContent){
+        if (reviewContent.classList.contains('line-clamp-8')) {
+            reviewContent.classList.remove('line-clamp-8')
+            toggleButton.textContent = 'Show less ⬆'
+        }
+        else {
+            reviewContent.classList.add('line-clamp-8')
+            toggleButton.textContent = 'Show more ⬇'
+        }
+    }
+
+    function getContainerLines (elem) {
+        const style = window.getComputedStyle(elem, null).getPropertyValue('font-size')
+        const fontSize = parseFloat(style)
+        const lineHeight = fontSize * 1.5;
+        const height = elem.clientHeight;
+        return Math.round(height/lineHeight)
+    }
+
+    function toggleDescription(toggleDescriptionBtn, descriptionText) {
+        descriptionText.classList.toggle('line-clamp-8')
+        toggleDescriptionBtn.textContent === 'Show more ⬇' ? toggleDescriptionBtn.textContent = 'Show less ⬆' : toggleDescriptionBtn.textContent = 'Show more ⬇';
+    }
+
+    function trimDescription(){
+        const descriptionLines = getContainerLines(bookDescription.querySelector('.description-text'))
+        if ( descriptionLines > 8) {
+            const descriptionText = bookDescription.querySelector('.description-text')
+            const toggleDescriptionBtn = bookDescription.querySelector('.toggle-description-btn')
+
+            descriptionText.classList.add('line-clamp-8')
+            toggleDescriptionBtn.classList.remove('hidden')
+            toggleDescriptionBtn.textContent = 'Show more ⬇'
+            toggleDescriptionBtn.addEventListener('click', ()=> {
+                toggleDescription(toggleDescriptionBtn, descriptionText)
+            }
+            )
+        }
+    }
+
+    reviewCardBodies.forEach(elem => {
+        const toggleReviewButton = elem.querySelector('.toggle-comment-btn');
+        const reviewContent = elem.querySelector('.review-content')
+
+        const lines = getContainerLines(reviewContent)
+        if (lines >= 8) {
+            reviewContent.classList.add('line-clamp-8')
+            toggleReviewButton.classList.remove('invisible')
+            toggleReviewButton.textContent='Show more ⬇'
+            toggleReviewButton.addEventListener('click', () => {
+                toggleReview(toggleReviewButton, reviewContent)
+            })
+        }
+        else {
+            toggleReviewButton.textContent=''
+        }
+    })
+
+
+
+
+    trimDescription()
+    editCommentBtn.addEventListener('click', toggleEditor)
+
+
+    </script>
+
+{% endblock %}

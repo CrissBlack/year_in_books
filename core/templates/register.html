@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+ <section class="auth-container">
+
+        {% for message in get_flashed_messages() %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>Alert!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+        {% endfor %}
+
+        <div class="auth-box">
+            <div class="auth-img-col">
+                <img src="{{ url_for('static', filename='/img/nook.jpg') }}"
+                     class="nook-img">
+            </div>
+            <div class="auth-form-col">
+
+  <div class="auth-header">
+
+                                                <h1 class="title-font">Create a new account</h1>
+                                            </div>
+
+                <form method="post" action=""  class="auth-form">
+
+                         {{ form.hidden_tag() }}
+
+                                            <div class="form-group">
+                                                <p>{{ form.username.label(class='auth-label title-font') }}<br>
+                                                    {{ form.username(class='auth-input') }}</p>
+                                                {% for error in form.username.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group">
+                                                <p>{{ form.email.label(class='auth-label title-font') }}<span><em> (Optional)</em></span><br>
+                                                    {{ form.email(class='auth-input') }} </p>
+                                                {% for error in form.email.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group">
+                                                <p>{{ form.password.label(class='auth-label title-font') }}<br>
+                                                    {{ form.password(class='auth-input') }}</p>
+                                                {% for error in form.password.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="form-group">
+                                                <p>{{ form.confirm_password.label(class='auth-label title-font') }}<br>
+                                                    {{ form.confirm_password(class='auth-input') }}</p>
+                                                {% for error in form.confirm_password.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="form-group">
+                                                {{ form.submit(class="btn btn-primary auth-btn") }}
+                                            </div>
+
+
+
+                </form>
+
+
+            </div>
+        </div>
+
+    </section>
+
+
+
+
+
+
+{% endblock %}

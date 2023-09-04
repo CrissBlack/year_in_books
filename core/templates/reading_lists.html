@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+
+    <div class="container bookshelves">
+
+
+        {#    LEFT COLUMN    -    BOOKSHELVES#}
+
+        <div class="row">
+            <div class="col-3 col-md-3" id="lists-left-col">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col"><h3>Bookshelves</h3></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for user_bookshelf in current_user.bookshelves %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('main.reading_lists', selected_bookshelf_name = user_bookshelf.name) }}">
+
+                                    {% if selected_bookshelf == user_bookshelf %}
+                                        <em>{{ user_bookshelf.name }} ({{ user_bookshelf.books|length }})</em>
+                                    {% else %}
+                                        {{ user_bookshelf.name }} ({{ user_bookshelf.books|length }})
+                                    {% endif %}
+                                </a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+
+                <details>
+                    <summary>
+                        Add shelf
+                    </summary>
+                    <form action="" method="post" novalidate>
+                        {{ new_shelf_form.hidden_tag() }}
+                        {{ new_shelf_form.shelf_input }} {{ new_shelf_form.submit }}
+                    </form>
+                </details>
+                {% if new_shelf_form.errors %}
+                    {% for message in new_shelf_form.shelf_input.errors %}
+                        {{ message(class='form-errors') }}
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            {#    RIGHT COLUMN     -     BOOK LIST#}
+
+            <div class="col-md-auto" id="lists-right-col">
+                <h2 class="title-font">{{ selected_bookshelf.name }}</h2>
+                <hr>
+                {% if selected_bookshelf.is_custom %}
+
+
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        Delete shelf
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Warning</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete {{ selected_bookshelf.name }}? </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <form action="{{ url_for('main.delete_bookshelf') }}" method="post">
+                                        <input type="hidden" name="next_url"
+                                               value="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">
+                                        <input type="hidden" name="selected_bookshelf_name"
+                                               value="{{ selected_bookshelf.name }}">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+
+
+
+                {% endif %}
+                <table class="table">
+
+                    <thead>
+                    <tr>
+                        <th scope="col" class="col-cover">cover</th>
+                        <th scope="col" class="col-title">title</th>
+                        <th scope="col" class="col-author">author</th>
+                        <th scope="col" class="col-avg-rating">avg rating</th>
+                        <th scope="col" class="col-user-rating">your rating</th>
+                        <th scope="col" class="col-shelves">shelves</th>
+                        <th scope="col" class="col-remove-book"></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% if not selected_bookshelf.books %}
+
+                        <td></td>
+                        <td>Only crickets here.</td>
+
+                    {% else %}
+
+                        {% for item in books_with_ratings %}
+                            {% set book = item[0] %}
+                            {% set rating = item[1] %}
+                            <tr>
+                                <td><img src="{{ book.cover_url }}" alt="{{ book.title }}"></td>
+
+                                <td>
+                                    <a href="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}"> {{ book.title }}</a>
+                                </td>
+
+                                <td>{% for author in book.authors %}
+                                    {{ author.name }}
+                                {% endfor %}</td>
+
+                                <td>{{ book.g_rating }}</td>
+
+                                <td>
+                                    <form action="{{ url_for('main.rate_book', book_title=book.title) }}" method="post">
+                                        <input type="hidden" name="next-url"
+                                               value="{{ url_for('main.reading_lists', selected_bookshelf_name=selected_bookshelf.name) }}">
+
+                                        {% for i in range(1, 6) %}
+
+                                            {% if i <= rating %}
+                                                <button type="submit" name="rating-value" class="checked-star"
+                                                        value="{{ i }}">&#9733;
+                                                </button>
+
+                                            {% else %}
+                                                <button class="blank-star" type="submit" name="rating-value"
+                                                        value="{{ i }}">&#9733;
+                                                </button>
+                                            {% endif %}
+
+
+                                        {% endfor %}
+                                    </form>
+                                </td>
+
+                                <td>{% for bookshelf in current_user.bookshelves %}
+                                    {% if book in bookshelf.books %}
+                                        <a href="{{ url_for('main.reading_lists', selected_bookshelf_name = bookshelf.name) }}"> {{ bookshelf.name }}, </a>
+
+                                    {% endif %}
+
+                                {% endfor %}
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('main.remove_from_bookshelf', bookshelf_name=selected_bookshelf.name, goodreads_id=book.goodreads_id) }}"
+                                          method="post">
+
+                                        <input type="hidden" name="next_url"
+                                               value="{{ url_for('main.reading_lists', selected_bookshelf_name=selected_bookshelf.name) }}">
+                                        <input type="submit" value="X">
+
+
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="m-bookshelves-section hidden">
+        <div class="m-challenge-section">
+
+            <div class="mobile-challenge-container">
+                <h2>Your {{ data['year'] }} Reading Goal</h2>
+                <hr>
+                {% if not current_user.challenge %}
+
+                    <h2>How many books do you want to read in {{ data['year'] }}?</h2>
+                    <form method="post" action="{{ url_for('main.update_challenge') }}">
+                        <input type="hidden" name="next_url" value="{{ url_for('main.reading_challenge') }}">
+                        {{ challenge_form.hidden_tag() }}
+                        {{ challenge_form.challenge(class='mobile-challenge-input') }}
+                        {{ challenge_form.update_challenge(class='mobile-challenge-btn') }}
+
+                    </form>
+                {% else %}
+                    {% if data['challenge_completed'] %}
+                        <h3 class="title-font">Congrats!</h3>
+                        <progress value="{{ data['current_year_books']|length }}"
+                                  max="{{ current_user.challenge }}"></progress>
+                        <p>You've read {{ data['current_year_books']|length }}
+                            <a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">books</a>
+                            out of your goal of {{ current_user.challenge }}</p>
+
+                    {% else %}
+                        <h3 class="title-font">{{ data['current_year_books']|length }}<a
+                                href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}"
+                                class="title-font"> books</a>
+                            completed out of {{ current_user.challenge }}</h3>
+
+
+
+                        <progress value="{{ data['current_year_books']|length }}"
+                                  max="{{ current_user.challenge }}"></progress>
+                        {% if data['challenge_status'] == 0 %}
+                            <p>You're on track!</p>
+                        {% elif data['challenge_status'] < 0 %}
+                            <p>{{ data['challenge_status']|abs }} books behind schedule</p>
+                        {% else %}
+                            <p>{{ data['challenge_status'] }} books ahead of schedule</p>
+                        {% endif %}
+                    {% endif %}
+
+
+                    <div>
+                        <details class="edit-challenge-form">
+                            <summary>Edit goal</summary>
+                            <form action="{{ url_for('main.update_challenge') }}" method="post">
+                                <input type="hidden" name="next_url" value="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">
+                                {{ challenge_form.hidden_tag() }}
+                                {{ challenge_form.challenge(class='mobile-challenge-input') }}
+                                {{ challenge_form.update_challenge(class='mobile-challenge-btn') }}
+                                {% for error in challenge_form.challenge.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </form>
+                        </details>
+                    </div>
+
+
+
+                {% endif %}
+
+            </div>
+        </div>
+    <hr>
+    <div class="m-selected-bookshelf">
+    {% if selected_bookshelf.books %}
+                <h2 class="header">{{ selected_bookshelf.name }}</h2>
+
+{#                {% set curr_reading = data['currently_reading'] %}#}
+
+
+                    <div class="m-bookshelf-books-collapsed">
+                        {% for item in books_with_ratings %}
+                            {% set book = item[0] %}
+                            {% set rating = item[1] %}
+
+                             <div class="book-container-collapsed">
+                        <div class="book-cover-container">
+                            {% if book.cover_path %}
+                            <a href="{{ url_for('main.book_view', goodreads_id = book.goodreads_id) }}">
+                                <img src="{{ url_for('static', filename=book.cover_path) }}"
+                                      title="{{ book.title }}"></a>
+                            {% endif %}
+                        </div>
+
+                                 <div class="book-info invisible">
+                         <a href="{{ url_for('main.book_view', goodreads_id = book.goodreads_id) }}">
+                                <p class="shelf-title" title="{{ book.title }}">{{ book.title }}</p></a>
+                                 <p class="shelf-author">By: {% for author in book.authors %}
+                                     {{ author.name }}
+                                     {% endfor %}</p>
+                                 <div class="rating">
+                                     {% if rating %}
+                                     {% for i in range(1, 6) %}
+                                            {% if i <= rating %}
+                                                <button  type="button" name="rating-value" class="checked-star"  value="{{ i }}">&#9733;</button>
+
+                                        {% else %}
+                                        <button  class="blank-star" type="button" name="rating-value" >&#9733;</button>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+</div>
+                                 </div>
+                        </div>
+
+
+                        {% endfor %}
+
+                    </div>
+        <button class="btn-collapse hidden" type="button">Collapse</button>
+                                                  <button class="btn-expand" type="button">Expand</button>
+
+    {% endif %}
+    </div>
+    <hr>
+        <div class="mobile-bookshelves">
+            <h2 class="header">Bookshelves</h2>
+
+            {% for shelf in current_user.bookshelves %}
+                <div class="mobile-shelf">
+                    <div class="shelf-covers">
+                        {% for book in shelf.books[:3] %}
+                            {% if book.cover_path %}
+                                <img src="{{ url_for('static', filename=book.cover_path) }}">
+                            {% endif %}
+
+
+
+                        {% endfor %}
+                    </div>
+{#                    <div class="shelf-name">#}
+                        <h3 class="shelf-name"><a href="{{ url_for('main.reading_lists', selected_bookshelf_name=shelf.name) }}"> {{ shelf.name }}</a></h3>
+{#                    </div>#}
+
+                </div>
+            <hr>
+            {% endfor %}
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+    const expandBtn = document.querySelector('.btn-expand')
+    const collapseBtn = document.querySelector('.btn-collapse')
+    const shelfContainerEl = document.querySelector('.m-bookshelf-books-collapsed')
+    const bookContainerEls = document.querySelectorAll('.book-container-collapsed')
+    const bookInfoEls = document.querySelectorAll('.book-info')
+
+    function expandShelf(){
+        shelfContainerEl.classList.add('m-bookshelf-books-expanded')
+        bookContainerEls.forEach(elem => {
+            elem.classList.remove('book-container-collapsed')
+            elem.classList.add('book-container-expanded')
+        })
+        bookInfoEls.forEach(elem => elem.classList.remove('invisible'))
+        expandBtn.classList.add('hidden')
+        collapseBtn.classList.remove('hidden')
+    }
+
+    function collapseShelf(){
+        shelfContainerEl.classList.remove('m-bookshelf-books-expanded')
+        bookContainerEls.forEach(elem => {
+            elem.classList.add('book-container-collapsed')
+            elem.classList.remove('book-container-expanded')
+        })
+         expandBtn.classList.remove('hidden')
+        collapseBtn.classList.add('hidden')
+        bookInfoEls.forEach(elem => elem.classList.add('invisible'))
+
+    }
+    expandBtn.addEventListener('click', expandShelf)
+    collapseBtn.addEventListener('click', collapseShelf)
+    </script>
+{% endblock %}

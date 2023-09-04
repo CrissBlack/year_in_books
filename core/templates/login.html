@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+    <section class="auth-container">
+
+        {% for message in get_flashed_messages() %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>Alert!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+        {% endfor %}
+
+        <div class="auth-box">
+            <div class="auth-img-col">
+                <img src="{{ url_for('static', filename='/img/nook.jpg') }}"
+                     class="nook-img">
+            </div>
+            <div class="auth-form-col">
+                <div class="auth-header">
+
+                                                <h1 class="title-font">Sign into your
+                                                account</h1>
+                </div>
+                <form method="post" action="" novalidate class="auth-form">
+
+                        {{ form.hidden_tag() }}
+
+
+                        <p>{{ form.username.label(class='auth-label title-font') }}<br>
+                            {{ form.username(class='auth-input') }}</p>
+
+
+                        <p>{{ form.password.label(class='auth-label title-font') }}<br>
+                            {{ form.password(class='auth-input') }}</p>
+
+                        {{ form.submit(class="btn btn-primary auth-btn") }}
+
+
+                        <br>
+
+                </form>
+                <p >Don't have an account?<br> <a
+                                href="{{ url_for('auth.register') }}"
+                                style="color: #393f81;">Register here</a></p>
+
+            </div>
+        </div>
+
+    </section>
+
+{% endblock %}

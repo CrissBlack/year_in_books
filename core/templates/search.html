@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div class="container search-container">
+
+
+
+            <h4>Search results for {{ query }}</h4>
+    <hr>
+                                <div class="search-result">
+
+                                            <table class="table">
+                                                <tbody>
+                                                {% for result in search_results %}
+
+                                                    <tr>
+                                                        <td>
+                                                            <div>
+                                                                <img src="{{ result.cover_url }}"
+                                                                     alt="Cover pic"/>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <a href="{{ url_for('main.book_view', goodreads_id=result.goodreads_id) }}">
+                                                                    {{ result.title }}
+                                                                </a>
+                                                                <p class="m-0 text-muted">by
+                                                                    {% for author in result.authors %}
+                                                                        {{ author.name }},
+                                                                    {% endfor %}</p>
+
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                        <form method="post">
+                                            <input type="hidden" name="next_url" value="{{ url_for('main.search', query=query) }}">
+
+
+                                                           <div class="btn-group">
+                                                           {% if result in to_read_shelf.books %}
+  <button type="submit" formaction="{{ url_for('main.remove_from_bookshelf', bookshelf_name=to_read_shelf.name, goodreads_id=result.goodreads_id) }}" class="btn btn-success">Want to Read</button>
+                                                           {% else %}
+   <button type="submit" formaction="{{ url_for('main.add_to_bookshelf', bookshelf_name=to_read_shelf.name, goodreads_id=result.goodreads_id) }}" class="btn btn-secondary">Want to Read</button>
+                                                           {% endif %}
+  <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="visually-hidden">Toggle Dropdown</span>
+  </button>
+  <ul class="dropdown-menu">
+      {% for shelf in current_user.bookshelves %}
+          {% if result in shelf.books %}
+            <li><button type="submit" formaction="{{ url_for('main.remove_from_bookshelf', bookshelf_name=shelf.name, goodreads_id=result.goodreads_id) }}"
+                        class="btn active btn-success dropdown-item">{{ shelf.name }}</button></li>
+              {% else %}
+
+            <li><button type="submit" formaction="{{ url_for('main.add_to_bookshelf', bookshelf_name=shelf.name, goodreads_id=result.goodreads_id) }}"
+                        class="btn dropdown-item">{{ shelf.name }}</button></li>
+
+          {% endif %}
+
+
+          {% endfor %}
+
+
+{#    <li><hr class="dropdown-divider"></li>#}
+  </ul>
+</div>
+</form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                </div>
+
+            </div>
+
+
+
+{% endblock %}

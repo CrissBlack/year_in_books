@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reading Challenge</title>
+</head>
+{% extends 'base.html' %}
+{% block body %}
+
+    <div class="m-challenge-section">
+
+    <div class="mobile-challenge-container">
+    <h3 >Your {{ data['year'] }} Reading Goal</h3>
+
+        {% if not current_user.challenge %}
+
+            <h2 >How many books do you want to read in {{ data['year'] }}?</h2>
+            <form method="post" action="{{ url_for('main.update_challenge') }}">
+                <input type="hidden" name="next_url" value="{{ url_for('main.reading_challenge') }}">
+                {{ form.hidden_tag() }}
+                {{ form.challenge(class='mobile-challenge-input') }}
+                {{ form.update_challenge(class='mobile-challenge-btn') }}
+
+            </form>
+        {% else %}
+            {% if data['challenge_completed'] %}
+                <h3 class="title-font">Congrats!</h3>
+                <progress value="{{ data['current_year_books']|length }}"
+                          max="{{ current_user.challenge }}"></progress>
+                <p>You've read {{ data['current_year_books']|length }}
+                    <a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">books</a>
+                    out of your goal of {{ current_user.challenge }}</p>
+
+            {% else %}
+                <h3 class="title-font">{{ data['current_year_books']|length }}<a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}" class="title-font"> books</a>
+                    completed out of {{ current_user.challenge }}</h3>
+
+
+
+                <progress value="{{ data['current_year_books']|length }}"
+                          max="{{ current_user.challenge }}"></progress>
+                {% if data['challenge_status'] == 0 %}
+                    <p>You're on track!</p>
+                {% elif data['challenge_status'] < 0 %}
+                    <p>{{ data['challenge_status']|abs }} books behind schedule</p>
+                {% else %}
+                    <p>{{ data['challenge_status'] }} books ahead of schedule</p>
+                {% endif %}
+            {% endif %}
+
+
+            <div>
+                                    <details class="edit-challenge-form">
+                                        <summary>Edit goal</summary>
+                                        <form action="{{ url_for('main.update_challenge') }}" method="post">
+                                        <input type="hidden" name="next_url" value="{{ url_for('main.reading_challenge') }}">
+                {{ form.hidden_tag() }}
+                {{ form.challenge(class='mobile-challenge-input') }}
+                {{ form.update_challenge(class='mobile-challenge-btn') }}
+                {{ form.cancel_challenge(class='mobile-challenge-btn') }}
+                                            {% for error in form.challenge.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </form>
+                                    </details>
+                                </div>
+
+
+
+{#            <h3 class="title-font">{{ current_user.challenge }} books</h3>#}
+
+
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+</html>

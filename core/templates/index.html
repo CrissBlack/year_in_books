@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+    <div class="index-wrapper">
+
+        <div class="left-col">
+            <div class="index-curr-reading">
+                <h4 class="header">Currently Reading</h4>
+                {% set curr_reading = data['currently_reading'] %}
+                {% if curr_reading %}
+                    <div class="curr-reading-books">
+                        {% for book in  curr_reading %}
+
+                            <div class="card mb-3 curr-reading-card border-0">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <a href="{{ url_for('main.book_view', goodreads_id=book.goodreads_id) }}">
+                                            <img src="{{ url_for('static', filename=book.cover_path) }}"
+                                                 class="img-fluid rounded-start" alt="...">
+                                        </a>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <p class="card-title curr-reading-title">{{ book.title }}</p>
+                                            <p class="card-text curr-reading-author">by
+                                                {% for author in book.authors %}{{ author.name }},{% endfor %}</p>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        {% endfor %}
+                    <a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Currently Reading') }}">View more</a>
+                    </div>
+
+                {% else %}
+                    <p>Nothing yet.</p>
+                {% endif %}
+                <hr>
+            </div>
+
+
+                <div class="index-reading-challenge">
+                    <h4 class="header">Reading Challenge</h4>
+
+                    <div class="row">
+                        <div class="col reading-challenge-stamp">
+                            <img class="reading-challenge-img"
+                                 src="{{ url_for('static', filename='img/challenge_icon.png') }}">
+                        </div>
+                        <div class="col reading-challenge-progress">
+                            {% if current_user.challenge %}
+
+
+                                {% if data['challenge_completed'] %}
+                                    <h2>Congrats!</h2>
+                                    <p>You've read {{ data['current_year_books']|length }}
+                                        <a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">books</a>
+                                        out of your goal of {{ current_user.challenge }}</p>
+
+                                {% else %}
+                                    <h2>{{ data['current_year_books']|length }}</h2>
+                                    <p>
+                                        <a href="{{ url_for('main.reading_lists', selected_bookshelf_name='Read') }}">books</a>
+                                        completed</p>
+                                    {% if data['challenge_status'] == 0 %}
+                                        <p>You're on track!</p>
+                                    {% elif data['challenge_status'] < 0 %}
+                                        <p>{{ data['challenge_status']|abs }} books behind schedule</p>
+                                    {% else %}
+                                        <p>{{ data['challenge_status'] }} books ahead of schedule</p>
+                                    {% endif %}
+                                    <progress value="{{ data['current_year_books']|length }}"
+                                              max="{{ current_user.challenge }}"
+                                              style="max-width: 130px"></progress>
+                                    <span>{{ data['current_year_books']|length }}/{{ current_user.challenge }}</span>
+                                {% endif %}
+
+                                <div>
+                                    <details class="edit-challenge-form">
+                                        <summary>Edit goal</summary>
+                                        <form action="{{ url_for('main.update_challenge') }}" method="post">
+                                        <input type="hidden" name="next_url" value="{{ url_for('main.index') }}">
+                                            {{ challenge_form.hidden_tag() }}
+                                            {{ challenge_form.challenge }}{{ challenge_form.update_challenge(class='challenge-btn') }}
+                                            {{ challenge_form.cancel_challenge(class='challenge-btn') }}
+                                            {% for error in challenge_form.challenge.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </form>
+                                    </details>
+                                </div>
+
+                            {% else %}
+                                <p>I want to read</p>
+                                <form method="post" action="" novalidate>
+                                    {{ challenge_form.hidden_tag() }}
+                                    {{ challenge_form.challenge }}
+                                    <p>books in {{ data['date'].year }}</p>
+                                    {{ challenge_form.update_challenge }}
+
+                                </form>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                <hr>
+                </div>
+
+
+
+                <div class="col index-bookshelves">
+                    <h4 class="header">Bookshlves</h4>
+                    {% for bookshelf in current_user.bookshelves %}
+                        <p class="index-bookshelves">
+                            <a href="{{ url_for('main.reading_lists', selected_bookshelf_name=bookshelf.name) }}">
+                                {{ bookshelf.books|length }} {{ bookshelf.name }}</a>
+                        </p>
+                    {% endfor %}
+
+
+                </div>
+
+
+        </div>
+        <div class="index middle-col ">
+            <div class="index-popular-books">
+                <h2 class="header title-font">Most popular books in {{ data['date'].strftime('%B') }} {{ data['date'].strftime('%Y') }}</h2>
+                <div class="popular-releases">
+                    {% for release in data['popular_books'] %}
+                        <div class="popular-release">
+                        <div class="book-cover-container">
+                            <a href="{{ url_for('main.book_view', goodreads_id = release.goodreads_id) }}">
+                                <img src="{{ url_for('static', filename=release.cover_path) }}"
+                                     class="popular-release-cover" title="{{ release.title }}"></a>
+                        </div>
+                         <a href="{{ url_for('main.book_view', goodreads_id = release.goodreads_id) }}">
+                                <p class="new-release-title" title="{{ release.title }}">
+
+                                        {{ release.title }}
+
+                                </p></a>
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+            <hr>
+            <div class="index new-reviews">
+                <h4 class="title-font">Community Updates</h4>
+                {% if not data['new_reviews'] %}
+                    <p>None yet.</p>
+                {% else %}
+
+
+                    {% for review in data['new_reviews'].items %}
+
+
+
+
+
+
+
+
+
+                        <div class="card mb-3 bg-transparent index-review-card ">
+
+                            <div class="card-title review-header">
+                                <h5><span class="username title-font">{{ review.user.username }} </span><span
+                                        class="review-action">{{ 'has reviewed:' if review.content else 'has rated:' }} </span>
+                                </h5>
+                                <p class="card-text review-date"><small
+                                    class="text-muted">{{ review.date_created }}</small></p>
+
+
+                            </div>
+
+                            <div class="row g-0">
+                                <div class="review-left-col">
+                                    {% if review.book.cover_path %}
+                                    <a href="{{ url_for('main.book_view', goodreads_id=review.book.goodreads_id) }}">
+                                        <img src="{{ url_for('static', filename= review.book.cover_path) }}"
+                                             class="img-fluid rounded-start review-cover" alt="">
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                <div class="review-right-col">
+
+                                    <div class="card-body">
+                                        <a href="{{ url_for('main.book_view', goodreads_id=review.book.goodreads_id) }}" class="index-review-title"> {{ review.book.title|safe }}</a>
+
+                                        {% if review.rating %}
+                                            <div class="stars">
+
+                                                {% for i in range(1, 6) %}
+                                                    {% if i <= review.rating %}
+                                                        <button type="button" name="rating-value"
+                                                                class="checked-star star" value="{{ i }}">&#9733;
+                                                        </button>
+
+                                                    {% else %}
+                                                        <button class="blank-star star" type="button"
+                                                                name="rating-value">&#9733;
+                                                        </button>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        {% if review.content %}
+
+                                            <div class="card-text review-body ">
+                                            <div class="review-content">
+                                               <p > {{ review.content|safe }}</p>
+                                            </div>
+                                            <div class="toggle-buttons">
+                                                <button type="button" class="hidden toggle-review-btn"></button>
+                                            </div>
+                                            </div>
+
+                                        {% endif %}
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    {% endfor %}
+
+
+
+
+                {% endif %}
+
+                {% if data['new_reviews'].page>1 %}
+                    <a href="{{ url_for('main.index', page=data['new_reviews'].page - 1 ) }}">Previous</a>
+                {% endif %}
+                {% if data['new_reviews'].has_next %}
+                    <a href="{{ url_for('main.index', page=data['new_reviews'].page + 1 ) }}">Next</a>
+                {% endif %}
+
+
+            </div>
+        </div>
+        <div class="right-col">
+
+            <h4 class="header">To Read Pile</h4>
+            <div class="to-read-pile">
+
+                {% if current_user.get_shelf('Want to Read').books %}
+                    {% for book in current_user.get_random_books('Want to Read', 6) %}
+                        <div class="to-read-book">
+                            <a href="{{ url_for('main.book_view', goodreads_id = book.goodreads_id) }}"
+                               class="to-read-book" title="{{ book.title }}">
+                                <img src="{{ book.cover_url }}"
+                                     style="height: 85px; width: 85px; object-fit: cover">
+
+                            </a>
+                        </div>
+                    {% endfor %}
+                    <a href="{{ url_for('main.reading_lists', selected_bookshelf_name = 'Want to Read') }}">
+                        <p>View all books</p>
+                    </a>
+                {% else %}
+                    <p>Nothing yet.</p>
+                {% endif %}
+
+
+                <hr>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript">
+    const reviews = document.querySelectorAll('.review-body')
+
+    function getContainerLines (elem) {
+        const style = window.getComputedStyle(elem, null).getPropertyValue('font-size')
+        const fontSize = parseFloat(style)
+        const lineHeight = fontSize * 1.5;
+        const height = elem.clientHeight;
+        return Math.round(height/lineHeight)
+    }
+    function toggleReview(reviewText, toggleReviewBtn) {
+        reviewText.classList.toggle('line-clamp-8')
+        toggleReviewBtn.textContent === 'Show more ⬇' ? toggleReviewBtn.textContent='Show less ⬆' : toggleReviewBtn.textContent='Show more ⬇'
+    }
+    reviews.forEach(elem => {
+        const reviewText = elem.querySelector('.review-content')
+        const toggleReviewBtn = elem.querySelector('.toggle-review-btn')
+
+        if (getContainerLines(reviewText) > 8) {
+            reviewText.classList.add('line-clamp-8')
+            toggleReviewBtn.classList.remove('hidden')
+            toggleReviewBtn.textContent = 'Show more ⬇'
+            toggleReviewBtn.addEventListener('click', ()    => {
+                toggleReview(reviewText, toggleReviewBtn)
+            })
+        }
+    })
+
+
+    </script>
+{% endblock %}
