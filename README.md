@@ -8,7 +8,8 @@ INDEX PAGE
 
 BOOK VIEW
 
-![image](https://github.com/CrissBlack/year_in_books/assets/17780107/df21ee84-fbb5-4b69-9881-929ec377d35f)
+![image](https://github.com/CrissBlack/year_in_books/assets/17780107/af53a90d-b7e5-4fc0-addf-ae95203c2111)
+
 
 LOGIN PAGE
 
